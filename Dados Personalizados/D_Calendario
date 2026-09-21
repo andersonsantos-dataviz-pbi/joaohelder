@@ -1,0 +1,29 @@
+let
+	// Data Inicial
+	DataMin = #date(2016,1,1),
+	// Data final da calendário:
+	// Ultima data do ano seguinte --> Date.AddYears(Date.EndOfYear(Date.From(DateTime.LocalNow())),1),
+	// Ultima data do ano atual    --> Date.EndOfYear(Date.From(DateTime.LocalNow())),
+	// Ultima data do mês atual    --> Date.EndOfMonth(Date.From(DateTime.LocalNow())),
+	// Hoje                        --> Date.From(DateTime.LocalNow()),
+	Datamax = #date(2021,12,31), //Date.From(DateTime.LocalNow()), // Ultima data do mês atual
+	// Quantidade de dias entre DataMin e Datamax
+	Qtde_Dias = Duration.TotalDays(Datamax-DataMin)+1,
+	// Lista de Datas
+	Fonte = List.Dates(DataMin,Qtde_Dias,#duration(1,0,0,0)),
+	//Tabela Calendário
+	Tabela = #table(type table[Data=date, Dia=Int32.Type,  Semana = text, Semana Abrev = text, Mes Nome= text, Mes = Int32.Type, Trimestre = text,  Ano = Int32.Type,  AnoMesSeq = Int32.Type, MesAno = text],
+	List.Transform(Fonte, each {
+		_,//data 01/12/2022, 02/12/2022, ...
+		Date.Day(_),//dia 1,2,3...
+		Text.Repeat(Character.FromNumber(8203), 7 - Date.DayOfWeek(_)) & Text.BeforeDelimiter(Text.Proper(Date.ToText(_,"dddd", "pt-BR")),"-"),//Nome da Semana Segunda, Terça, Quarta, ...
+		Text.Repeat(Character.FromNumber(8203), 7 - Date.DayOfWeek(_)) & Text.Proper(Date.ToText(_,"ddd", "pt-BR")),//Nome da Semana Abreviado Seg, Ter, Qua ...
+		Text.Repeat(Character.FromNumber(8203), 12 - Date.Month(_)) & Text.Proper(Date.ToText(_,"MMM", "pt-BR")),//Nome do Mes Jan, Fev, Mar,
+		Date.Month(_),
+		"T" & Text.From(Date.QuarterOfYear(_)), //Trimestre T1, T2, T3 e T4
+		Date.Year(_),//Ano 2021, 2022, ...
+				12 * Date.Year(_) + Date.Month(_) - 1, //Número sequencial do ano/mês 24287, 24286, ...
+			Text.Proper(Date.ToText(_,"MMM/yyyy")) //Ano Mês Jan/2022, Fev/2022, ...
+		}))
+	in
+	    Tabela
